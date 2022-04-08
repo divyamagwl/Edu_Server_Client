@@ -34,12 +34,63 @@ static client_msg_t client_msg;
 #define MAX_MSG_SIZE sizeof(client_msg_t)
 #define MSG_BUFFER_SIZE (MAX_MSG_SIZE * MAX_MESSAGES)
 
+int MIN_COURSES = 10;
+int MAX_COURSES = 15;
+int MIN_TEACHERS = 5;
+int MAX_TEACHERS = 10;
+
+
+void init_config() {
+    /*
+    The initial configuration of the Edu Server with respect to the minimum and maximum values are configurable.
+    MIN_COURSES 10, MAX_COURSES 15, MIN_TEACHERS 5, MAX_TEACHERS 10
+
+    On Edu Server invocations, these above values can be given as configurable parameters
+    if the given values do not fall in the above limits, the above values will be chosen by the Server
+    */
+
+    int min_courses, max_courses, min_teachers, max_teachers;
+    
+    printf("Please set these initial configurations of the server:\n");
+
+    printf("MIN COURSES (min 10): ");
+    scanf("%d", &min_courses);
+    printf("MAX COURSES (max 15): ");
+    scanf("%d", &max_courses);
+    printf("MIN TEACHERS (min 5): ");
+    scanf("%d", &min_teachers);
+    printf("MAX COURSES (max 10): ");
+    scanf(" %d", &max_teachers); // Space is required before %d : https://stackoverflow.com/questions/26085237/simple-c-code-not-working
+
+    if(min_courses <= max_courses) {
+        if(min_courses >= MIN_COURSES && min_courses <= MAX_COURSES) {
+            MIN_COURSES = min_courses;
+        }
+        if(max_courses >= MIN_COURSES && max_courses <= MAX_COURSES) {
+            MAX_COURSES = max_courses;
+        }
+    }
+
+    if(min_teachers <= max_teachers) {
+        if(min_teachers >= MIN_TEACHERS && min_teachers <= MAX_TEACHERS) {
+            MIN_TEACHERS = min_teachers;
+        }
+        if(max_teachers >= MIN_TEACHERS && max_teachers <= MAX_TEACHERS) {
+            MAX_TEACHERS = max_teachers;
+        }
+    }
+
+    return;
+}
+
+
 int main(int argc, char **argv)
 {
     mqd_t qd_srv, qd_client; // Server and Client Msg queue descriptors
     int num = 1;
 
-    printf("Server MsgQ: Welcome!!!\n");
+    printf("Welcome to the Education Server!!!\n");
+    init_config();
 
     struct mq_attr attr;
 
