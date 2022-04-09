@@ -162,6 +162,29 @@ int add_teacher(char* name) {
     return MAX_TEACHER_FULL; // ERROR: Maximum teachers reached
 }
 
+int delete_teacher(char* name) {
+    // Checking if the teacher already exists or not
+    for(int i = 0; i < MAX_TEACHERS; i++) {
+        struct Teacher *t = malloc(sizeof(struct Teacher));
+        t = &teachers[i];
+        if(strcmp(name, t->name) == 0) {
+
+            for(int i = 0; i < MAX_COURSES; i++) {
+                struct Course *c = malloc(sizeof(struct Course));
+                c = &courses[i];
+                if(strcmp(t->name, c->name) == 0) {
+                    strcpy(c->teacher, "NULL");
+                }
+            }
+
+            strcpy(t->name, "NULL");
+            return SUCCESS; 
+        }
+    }
+
+    return TEACHER_NOT_EXISTS; // ERROR: Maximum teachers reached
+}
+
 
 int main(int argc, char **argv)
 {
@@ -215,7 +238,7 @@ int main(int argc, char **argv)
             status = add_teacher(client_query_details);
         }
         else if(strcmp(client_query_type, DELETE_TEACHER) == 0) {
-            printf("Delete karo teacher\n");
+            status = delete_teacher(client_query_details);
         }
 
         server_msg_t out_msg;
