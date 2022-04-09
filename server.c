@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <signal.h>
 
 #include "configs.h"
 
@@ -208,37 +209,64 @@ int delete_teacher(char* name) {
     return TEACHER_NOT_EXISTS; // ERROR: Maximum teachers reached
 }
 
+void print_report(FILE *fptr) {
+    fprintf(fptr, "\n------------REPORT STARTED----------------\n");
+
+    fprintf(fptr, "COURSES: \n");
+    for(int i = 0; i < MAX_COURSES; i++) {
+        struct Course c = courses[i];
+        if(strcmp("NULL", c.name) != 0) {
+            fprintf(fptr, "Name: %s Teacher: %s\n", c.name, c.teacher);
+        }
+    }
+
+    fprintf(fptr, "TEACHERS: \n");
+    for(int i = 0; i < MAX_TEACHERS; i++) {
+        struct Teacher t = teachers[i];
+        if(strcmp("NULL", t.name) != 0) {
+            fprintf(fptr, "Name: %s\n", t.name);
+        }
+    }
+
+    fprintf(fptr, "------------REPORT ENDED----------------\n");
+    return;
+}
+
 void* generate_report() {
     while(1) {
         sem_wait(&bin_sem);  // Thread gets blocked if bin_sem is not free
-        // sem_init(&bin_sem, 0, 0); // make bin_sem not free      
-        printf("\n------------REPORT STARTED----------------\n");
-
-        printf("COURSES: \n");
-        for(int i = 0; i < MAX_COURSES; i++) {
-            struct Course c = courses[i];
-            if(strcmp("NULL", c.name) != 0) {
-                printf("Name: %s Teacher: %s\n", c.name, c.teacher);
-            }
-        }
-
-        printf("TEACHERS: \n");
-        for(int i = 0; i < MAX_TEACHERS; i++) {
-            struct Teacher t = teachers[i];
-            if(strcmp("NULL", t.name) != 0) {
-                printf("Name: %s\n", t.name);
-            }
-        }
-
-        printf("\n------------REPORT ENDED----------------\n");
+        print_report(stdout);
         sem_post(&bin_sem);
-        sleep(5);
+        sleep(10);
     }
+}
+
+/* Signal Handler for SIGINT */
+void sigintHandler(int sig_num)
+{
+    /* Reset handler to catch SIGINT next time.
+       Refer http://en.cppreference.com/w/c/program/signal */
+    signal(sig_num, SIG_IGN);
+    FILE *fptr;
+
+    fptr = fopen("server.txt","w");
+
+    if(fptr == NULL)
+    {
+        printf("File opening error!");
+        exit(1);             
+    }
+
+    print_report(fptr);
+    fclose(fptr);
+    exit(0);
 }
 
 
 int main(int argc, char **argv)
 {
+    signal(SIGINT, sigintHandler);
+
     srand(time(NULL));   // Random number initialized, should only be called once.
 
     mqd_t qd_srv, qd_client; // Server and Client Msg queue descriptors
