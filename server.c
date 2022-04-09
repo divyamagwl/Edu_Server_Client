@@ -100,6 +100,31 @@ void init_config(int configurable) {
     return;
 }
 
+int add_course(char* name) {
+    // Checking if the teacher already exists
+    for(int i = 0; i < MAX_COURSES; i++) {
+        struct Course c = courses[i];
+        if(strcmp(name, c.name) == 0) {
+            return COURSE_EXISTS; // ERROR: Course with given name already exists
+        }
+    }
+
+    // Adding teacher to the first place where name is NULL
+    for(int i = 0; i < MAX_COURSES; i++) {
+        struct Course *c = malloc(sizeof(struct Course));
+        c = &courses[i];
+        if(strcmp("NULL", c->name) == 0) {
+            strcpy(c->name, name);
+            // TODO: Assign teacher randomly from given teachers
+            strcpy(c->teacher, "TEACHER");
+            return SUCCESS;
+        }
+    }
+
+    return MAX_COURSE_FULL; // ERROR: Maximum courses reached
+}
+
+
 int add_teacher(char* name) {
     // Checking if the teacher already exists
     for(int i = 0; i < MAX_TEACHERS; i++) {
@@ -166,7 +191,7 @@ int main(int argc, char **argv)
         printf("Query type = %s Details = %s.\n", client_query_type, client_query_details);
 
         if(strcmp(client_query_type, ADD_COURSE) == 0) {
-            printf("Add karo course\n");
+            status = add_course(client_query_details);
         }
         else if(strcmp(client_query_type, DELETE_COURSE) == 0) {
             printf("Delete karo course\n");
