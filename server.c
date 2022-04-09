@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <mqueue.h>
+#include <time.h>
 
 #include "configs.h"
 
@@ -105,7 +106,7 @@ int add_course(char* name) {
     for(int i = 0; i < MAX_COURSES; i++) {
         struct Course c = courses[i];
         if(strcmp(name, c.name) == 0) {
-            return COURSE_EXISTS; // ERROR: Course with given name already exists
+            return COURSE_DUPLICATE; // ERROR: Course with given name already exists
         }
     }
 
@@ -115,8 +116,25 @@ int add_course(char* name) {
         c = &courses[i];
         if(strcmp("NULL", c->name) == 0) {
             strcpy(c->name, name);
-            // TODO: Assign teacher randomly from given teachers
-            strcpy(c->teacher, "TEACHER");
+
+            // Assign teacher randomly from current teachers
+            struct Teacher available_teachers[10];
+            int current_teacher = 0;
+            for(int i = 0; i < MAX_TEACHERS; i++) {
+                struct Teacher *t = malloc(sizeof(struct Teacher));
+                t = &teachers[i];
+                if(strcmp("NULL", t->name) != 0) {
+                    available_teachers[current_teacher] = *t;
+                    current_teacher++;
+                }
+            }
+
+            if(current_teacher != 0) {
+                int r = rand() % current_teacher;
+                struct Teacher t = available_teachers[r];
+                strcpy(c->teacher, t.name);
+                printf("%s %s\n", c->name, c->teacher);
+            }
             return SUCCESS;
         }
     }
@@ -145,7 +163,7 @@ int add_teacher(char* name) {
     for(int i = 0; i < MAX_TEACHERS; i++) {
         struct Teacher t = teachers[i];
         if(strcmp(name, t.name) == 0) {
-            return TEACHER_EXISTS; // ERROR: Teacher with given name already exists
+            return TEACHER_DUPLICATE; // ERROR: Teacher with given name already exists
         }
     }
 
@@ -188,6 +206,8 @@ int delete_teacher(char* name) {
 
 int main(int argc, char **argv)
 {
+    srand(time(NULL));   // Random number initialized, should only be called once.
+
     mqd_t qd_srv, qd_client; // Server and Client Msg queue descriptors
 
     printf("Welcome to the Education Server!!!\n");
@@ -212,7 +232,6 @@ int main(int argc, char **argv)
 
     while (1)
     {
-        // ssize_t mq_receive(mqd_t mqdes, char *msg_ptr, size_t msg_len, unsigned int *msg_prio);
         if (mq_receive(qd_srv, (char *)&in_msg, MAX_MSG_SIZE, NULL) == -1)
         {
             perror("Server msgq: mq_receive");
@@ -252,8 +271,6 @@ int main(int argc, char **argv)
             continue;
         }
 
-        // Send back the value received + 10 to the client's queue
-        // int mq_send(mqd_t mqdes, const char *msg_ptr, size_t msg_len, unsigned int msg_prio);
         if (mq_send(qd_client, (char *)&out_msg, sizeof(out_msg), 0) == -1)
         {
             perror("Server MsgQ: Not able to send message to the client queue");
