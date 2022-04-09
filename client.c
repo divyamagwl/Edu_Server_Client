@@ -22,7 +22,6 @@ typedef struct
 {
     char msg_type[MSG_TYPE_LEN];
     char status_code[MSG_VAL_LEN];
-    char msg_val[MSG_VAL_LEN];
 } server_msg_t;
 
 void display_menu() {
@@ -126,7 +125,7 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        printf("Status code received from the server = %s with msg = %s.", in_msg.status_code, in_msg.msg_val);
+        printf("Status code received from the server = %s", in_msg.status_code);
 
     }
 

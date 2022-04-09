@@ -20,7 +20,6 @@ typedef struct
 {
     char msg_type[MSG_TYPE_LEN];
     char status_code[MSG_VAL_LEN];
-    char msg_val[MSG_VAL_LEN];
 } server_msg_t;
 
 
@@ -102,12 +101,11 @@ void init_config(int configurable) {
 }
 
 int add_teacher(char* name) {
-
     // Checking if the teacher already exists
     for(int i = 0; i < MAX_TEACHERS; i++) {
         struct Teacher t = teachers[i];
         if(strcmp(name, t.name) == 0) {
-            return STATUS_TEACHER_EXISTS;
+            return TEACHER_EXISTS; // ERROR: Teacher with given name already exists
         }
     }
 
@@ -117,11 +115,11 @@ int add_teacher(char* name) {
         t = &teachers[i];
         if(strcmp("NULL", t->name) == 0) {
             strcpy(t->name, name);
-            return STATUS_SUCCESS;
+            return SUCCESS;
         }
     }
 
-    return STATUS_MAX_TEACHER_FULL;
+    return MAX_TEACHER_FULL; // ERROR: Maximum teachers reached
 }
 
 
@@ -175,20 +173,14 @@ int main(int argc, char **argv)
         }
         else if(strcmp(client_query_type, ADD_TEACHER) == 0) {
             status = add_teacher(client_query_details);
-
-            for(int i = 0; i < MAX_TEACHERS; i++) {
-                struct Teacher t = teachers[i];
-                printf("Teacher name = %s", t.name);
-            }
         }
         else if(strcmp(client_query_type, DELETE_TEACHER) == 0) {
             printf("Delete karo teacher\n");
         }
 
         server_msg_t out_msg;
-        strcpy(out_msg.msg_type, "Server msg"); 
+        strcpy(out_msg.msg_type, "Server msg");
         sprintf(out_msg.status_code, "%d", status);
-        strcpy(out_msg.msg_val, "All good"); 
 
         // Open the client queue using the client queue name received
         if ((qd_client = mq_open(in_msg.client_q, O_WRONLY)) == 1)
