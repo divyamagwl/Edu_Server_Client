@@ -7,6 +7,9 @@
 #include <sys/stat.h>
 #include <mqueue.h>
 #include <time.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <semaphore.h>
 
 #include "configs.h"
 
@@ -37,6 +40,8 @@ struct Course {
     char name[COURSE_NAME_LEN];
     char teacher[TEACHER_NAME_LEN];
 } courses[15];
+
+sem_t bin_sem;
 
 
 void init_config(int configurable) {
@@ -203,6 +208,34 @@ int delete_teacher(char* name) {
     return TEACHER_NOT_EXISTS; // ERROR: Maximum teachers reached
 }
 
+void* generate_report() {
+    while(1) {
+        sem_wait(&bin_sem);  // Thread gets blocked if bin_sem is not free
+        // sem_init(&bin_sem, 0, 0); // make bin_sem not free      
+        printf("\n------------REPORT STARTED----------------\n");
+
+        printf("COURSES: \n");
+        for(int i = 0; i < MAX_COURSES; i++) {
+            struct Course c = courses[i];
+            if(strcmp("NULL", c.name) != 0) {
+                printf("Name: %s Teacher: %s\n", c.name, c.teacher);
+            }
+        }
+
+        printf("TEACHERS: \n");
+        for(int i = 0; i < MAX_TEACHERS; i++) {
+            struct Teacher t = teachers[i];
+            if(strcmp("NULL", t.name) != 0) {
+                printf("Name: %s\n", t.name);
+            }
+        }
+
+        printf("\n------------REPORT ENDED----------------\n");
+        sem_post(&bin_sem);
+        sleep(5);
+    }
+}
+
 
 int main(int argc, char **argv)
 {
@@ -227,6 +260,20 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+    int res_sem, res;
+    pthread_t thread;
+    
+    res_sem = sem_init(&bin_sem, 0, 1);
+    if(res_sem != 0) {
+        printf("Semaphore creation failure: %d\n", res_sem);
+        exit(1);
+    }
+
+    if( (res = pthread_create( &thread, NULL, &generate_report, "Thread")) )  {
+      printf("Thread creation failed: %d\n", res);
+      exit(1);
+   }
+
     client_msg_t in_msg;
     int status;
 
@@ -237,6 +284,8 @@ int main(int argc, char **argv)
             perror("Server msgq: mq_receive");
             exit(1);
         }
+
+        sem_wait(&bin_sem);
 
         char client_query_type[QUERY_TYPE_LEN];
         char client_query_details[MSG_VAL_LEN];
@@ -277,6 +326,7 @@ int main(int argc, char **argv)
             continue;
         }
 
+        sem_post(&bin_sem);
     } // end of while(1)
 
 } // end of main()
