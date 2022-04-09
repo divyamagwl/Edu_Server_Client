@@ -1,24 +1,15 @@
-// Lab11 MsgQ Client process
-// Compilation of this file
-// gcc -o msgqclt lab11_client.c -lrt
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <mqueue.h>
 #include <string.h>
 
-#define MSG_VAL_LEN 16
-// For the client queue message
-#define CLIENT_Q_NAME_LEN 16
-#define QUERY_TYPE_LEN 16
-
-// For the server queue message
-#define MSG_TYPE_LEN 16
+#include "configs.h"
 
 typedef struct
 {
@@ -33,17 +24,6 @@ typedef struct
     char status_code[MSG_VAL_LEN];
     char msg_val[MSG_VAL_LEN];
 } server_msg_t;
-
-#define SERVER_QUEUE_NAME "/server_msgq"
-#define QUEUE_PERMISSIONS 0660
-#define MAX_MESSAGES 10
-#define MAX_MSG_SIZE sizeof(client_msg_t)
-#define MSG_BUFFER_SIZE (MAX_MSG_SIZE * MAX_MESSAGES)
-
-#define ADD_COURSE "ADD_COURSE"
-#define DELETE_COURSE "DELETE_COURSE"
-#define ADD_TEACHER "ADD_TEACHER"
-#define DELETE_TEACHER "DELETE_TEACHER"
 
 void display_menu() {
 	printf("\n1. Add a course");
@@ -131,7 +111,6 @@ int main(int argc, char **argv)
         if(quit) break;
         if(!validChoice) continue;
 
-        // Send message to my_msgq_rx queue
         if (mq_send(qd_srv, (char *)&out_msg, sizeof(out_msg), 0) == -1)
         {
             perror("Client MsgQ: Not able to send message to the queue /server_msgq");
@@ -141,7 +120,6 @@ int main(int argc, char **argv)
         printf("Message sent successfully: %s %s\n", out_msg.query_type, out_msg.query_details);
 
         server_msg_t in_msg;
-        // ssize_t mq_receive(mqd_t mqdes, char *msg_ptr, size_t msg_len, unsigned int *msg_prio);
         if (mq_receive(qd_client, (char *)&in_msg, MAX_MSG_SIZE, NULL) == -1)
         {
             perror("Client MsgQ: mq_receive from server");

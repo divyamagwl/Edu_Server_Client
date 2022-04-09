@@ -7,16 +7,7 @@
 #include <sys/stat.h>
 #include <mqueue.h>
 
-#define MSG_VAL_LEN 16
-// For the client queue message
-#define CLIENT_Q_NAME_LEN 16
-#define QUERY_TYPE_LEN 16
-
-// For the server queue message
-#define MSG_TYPE_LEN 16
-
-#define COURSE_NAME_LEN 16
-#define TEACHER_NAME_LEN 16
+#include "configs.h"
 
 typedef struct
 {
@@ -32,16 +23,6 @@ typedef struct
     char msg_val[MSG_VAL_LEN];
 } server_msg_t;
 
-#define SERVER_QUEUE_NAME "/server_msgq"
-#define QUEUE_PERMISSIONS 0660
-#define MAX_MESSAGES 10
-#define MAX_MSG_SIZE sizeof(client_msg_t)
-#define MSG_BUFFER_SIZE (MAX_MSG_SIZE * MAX_MESSAGES)
-
-#define ADD_COURSE "ADD_COURSE"
-#define DELETE_COURSE "DELETE_COURSE"
-#define ADD_TEACHER "ADD_TEACHER"
-#define DELETE_TEACHER "DELETE_TEACHER"
 
 int MIN_COURSES = 10;
 int MAX_COURSES = 15;
@@ -54,11 +35,11 @@ struct Teacher {
 
 struct Course {
     char name[COURSE_NAME_LEN];
-    struct Teacher teacher;
+    char teacher[TEACHER_NAME_LEN];
 } courses[15];
 
 
-void init_config() {
+void init_config(int configurable) {
     /*
     The initial configuration of the Edu Server with respect to the minimum and maximum values are configurable.
     MIN_COURSES 10, MAX_COURSES 15, MIN_TEACHERS 5, MAX_TEACHERS 10
@@ -71,6 +52,7 @@ void init_config() {
     
     printf("Please set these initial configurations of the server:\n");
 
+    if(configurable) {
     printf("MIN COURSES (min 10): ");
     scanf("%d", &min_courses);
     printf("MAX COURSES (max 15): ");
@@ -97,9 +79,49 @@ void init_config() {
             MAX_TEACHERS = max_teachers;
         }
     }
+    }
+
+    for(int i = 0; i < MAX_COURSES; i++) {
+        char name[COURSE_NAME_LEN] = "NULL";
+        char teacher[TEACHER_NAME_LEN] = "NULL";
+        struct Course c;
+        strncpy(c.name, name, sizeof(c.name));
+        strncpy(c.teacher, teacher, sizeof(c.teacher));
+        courses[i] = c;
+    }
+
+    for(int i = 0; i < MAX_TEACHERS; i++) {
+        char name[TEACHER_NAME_LEN] = "NULL";
+        struct Teacher t;
+        strncpy(t.name, name, sizeof(t.name));
+        teachers[i] = t;
+    }
 
     printf("Initial server configuration set!\n");
     return;
+}
+
+int add_teacher(char* name) {
+
+    // Checking if the teacher already exists
+    for(int i = 0; i < MAX_TEACHERS; i++) {
+        struct Teacher t = teachers[i];
+        if(strcmp(name, t.name) == 0) {
+            return STATUS_TEACHER_EXISTS;
+        }
+    }
+
+    // Adding teacher to the first place where name is NULL
+    for(int i = 0; i < MAX_TEACHERS; i++) {
+        struct Teacher *t = malloc(sizeof(struct Teacher));
+        t = &teachers[i];
+        if(strcmp("NULL", t->name) == 0) {
+            strcpy(t->name, name);
+            return STATUS_SUCCESS;
+        }
+    }
+
+    return STATUS_MAX_TEACHER_FULL;
 }
 
 
@@ -108,7 +130,7 @@ int main(int argc, char **argv)
     mqd_t qd_srv, qd_client; // Server and Client Msg queue descriptors
 
     printf("Welcome to the Education Server!!!\n");
-    init_config(); // Initial server configuration
+    init_config(0); // Initial server configuration
     
     struct mq_attr attr;
 
@@ -125,6 +147,7 @@ int main(int argc, char **argv)
     }
 
     client_msg_t in_msg;
+    int status;
 
     while (1)
     {
@@ -135,12 +158,36 @@ int main(int argc, char **argv)
             exit(1);
         }
 
+        char client_query_type[QUERY_TYPE_LEN];
+        char client_query_details[MSG_VAL_LEN];
+
+        strcpy(client_query_type, in_msg.query_type);
+        strcpy(client_query_details, in_msg.query_details);
+
         printf("Client msg q name = %s\n", in_msg.client_q);
-        printf("Query type = %s Details = %s.\n", in_msg.query_type, in_msg.query_details);
+        printf("Query type = %s Details = %s.\n", client_query_type, client_query_details);
+
+        if(strcmp(client_query_type, ADD_COURSE) == 0) {
+            printf("Add karo course\n");
+        }
+        else if(strcmp(client_query_type, DELETE_COURSE) == 0) {
+            printf("Delete karo course\n");
+        }
+        else if(strcmp(client_query_type, ADD_TEACHER) == 0) {
+            status = add_teacher(client_query_details);
+
+            for(int i = 0; i < MAX_TEACHERS; i++) {
+                struct Teacher t = teachers[i];
+                printf("Teacher name = %s", t.name);
+            }
+        }
+        else if(strcmp(client_query_type, DELETE_TEACHER) == 0) {
+            printf("Delete karo teacher\n");
+        }
 
         server_msg_t out_msg;
         strcpy(out_msg.msg_type, "Server msg"); 
-        strcpy(out_msg.status_code, "300"); 
+        sprintf(out_msg.status_code, "%d", status);
         strcpy(out_msg.msg_val, "All good"); 
 
         // Open the client queue using the client queue name received
