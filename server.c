@@ -101,7 +101,7 @@ void init_config(int configurable) {
 }
 
 int add_course(char* name) {
-    // Checking if the teacher already exists
+    // Checking if the course already exists
     for(int i = 0; i < MAX_COURSES; i++) {
         struct Course c = courses[i];
         if(strcmp(name, c.name) == 0) {
@@ -109,7 +109,7 @@ int add_course(char* name) {
         }
     }
 
-    // Adding teacher to the first place where name is NULL
+    // Adding course to the first place where name is NULL
     for(int i = 0; i < MAX_COURSES; i++) {
         struct Course *c = malloc(sizeof(struct Course));
         c = &courses[i];
@@ -122,6 +122,21 @@ int add_course(char* name) {
     }
 
     return MAX_COURSE_FULL; // ERROR: Maximum courses reached
+}
+
+int delete_course(char* name) {
+    // Checking if the course already exists or not
+    for(int i = 0; i < MAX_COURSES; i++) {
+        struct Course *c = malloc(sizeof(struct Course));
+        c = &courses[i];
+        if(strcmp(name, c->name) == 0) {
+            strcpy(c->name, "NULL");
+            strcpy(c->teacher, "NULL");
+            return SUCCESS; 
+        }
+    }
+
+    return COURSE_NOT_EXISTS; // ERROR: Course does not exist so can't be removed
 }
 
 
@@ -194,7 +209,7 @@ int main(int argc, char **argv)
             status = add_course(client_query_details);
         }
         else if(strcmp(client_query_type, DELETE_COURSE) == 0) {
-            printf("Delete karo course\n");
+            status = delete_course(client_query_details);
         }
         else if(strcmp(client_query_type, ADD_TEACHER) == 0) {
             status = add_teacher(client_query_details);
