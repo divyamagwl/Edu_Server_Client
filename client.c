@@ -15,6 +15,7 @@
 #define MSG_VAL_LEN 16
 // For the client queue message
 #define CLIENT_Q_NAME_LEN 16
+#define QUERY_TYPE_LEN 16
 
 // For the server queue message
 #define MSG_TYPE_LEN 16
@@ -22,12 +23,14 @@
 typedef struct
 {
     char client_q[CLIENT_Q_NAME_LEN];
-    char msg_val[MSG_VAL_LEN];
+    char query_type[QUERY_TYPE_LEN];
+    char query_details[MSG_VAL_LEN];
 } client_msg_t;
 
 typedef struct
 {
     char msg_type[MSG_TYPE_LEN];
+    char status_code[MSG_VAL_LEN];
     char msg_val[MSG_VAL_LEN];
 } server_msg_t;
 
@@ -37,11 +40,24 @@ typedef struct
 #define MAX_MSG_SIZE sizeof(client_msg_t)
 #define MSG_BUFFER_SIZE (MAX_MSG_SIZE * MAX_MESSAGES)
 
+#define ADD_COURSE "ADD_COURSE"
+#define DELETE_COURSE "DELETE_COURSE"
+#define ADD_TEACHER "ADD_TEACHER"
+#define DELETE_TEACHER "DELETE_TEACHER"
+
+void display_menu() {
+	printf("\n1. Add a course");
+	printf("\n2. Delete a course");
+	printf("\n3. Add a teacher");
+	printf("\n4. Delete a teacher");
+	printf("\n5. Quit program");
+}
+
 int main(int argc, char **argv)
 {
-    char client_queue_name[64];
+    printf("Welcome to the Education Client!!!\n");
+
     mqd_t qd_srv, qd_client; // Server and Client Msg queue descriptors
-    int num = 1;
 
     if ((qd_srv = mq_open(SERVER_QUEUE_NAME, O_WRONLY)) == -1)
     {
@@ -67,23 +83,62 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    printf("Keep sending msgs to the /server_msgq and wait for the reply ...\n");
+    int quit = 0;
+    int choice, validChoice;
+    char query_msg[MSG_VAL_LEN];
+    display_menu();
 
-    while (1)
-    {
-        sprintf(out_msg.msg_val, "%d", num);
-        // send message to my_msgq_rx queue
-        // int mq_send(mqd_t mqdes, const char *msg_ptr, size_t msg_len, unsigned int msg_prio);
+    while(!quit) {
+        validChoice = 1;
+        printf("\nEnter your choice : ");
+	    scanf("%d%*c", &choice);
+
+        switch(choice)
+	    {
+            case 1:
+                strcpy(out_msg.query_type, ADD_COURSE);
+                printf("Enter course name: ");
+                scanf("%[^\n]%*c",query_msg);
+                strcpy(out_msg.query_details, query_msg);
+                break;
+            case 2:
+                strcpy(out_msg.query_type, DELETE_COURSE);
+                printf("Enter course name: ");
+                scanf("%[^\n]%*c",query_msg);
+                strcpy(out_msg.query_details, query_msg);
+                break;
+            case 3:
+                strcpy(out_msg.query_type, ADD_TEACHER);
+                printf("Enter teacher name: ");
+                scanf("%[^\n]%*c",query_msg);
+                strcpy(out_msg.query_details, query_msg);
+                break;
+            case 4:
+                strcpy(out_msg.query_type, DELETE_TEACHER);
+                printf("Enter teacher name: ");
+                scanf("%[^\n]%*c",query_msg);
+                strcpy(out_msg.query_details, query_msg);
+                break;            
+            case 5:
+                quit = 1;
+                break;
+            default:
+                printf("Please Enter a Valid Choice!!");
+                validChoice = 0;
+                break;
+        }
+
+        if(quit) break;
+        if(!validChoice) continue;
+
+        // Send message to my_msgq_rx queue
         if (mq_send(qd_srv, (char *)&out_msg, sizeof(out_msg), 0) == -1)
         {
             perror("Client MsgQ: Not able to send message to the queue /server_msgq");
             continue;
         }
 
-        printf("%d: Client MsgQ: Message sent successfully\n", num);
-
-        sleep(5); // sleep for 5 seconds
-        num++;
+        printf("Message sent successfully: %s %s\n", out_msg.query_type, out_msg.query_details);
 
         server_msg_t in_msg;
         // ssize_t mq_receive(mqd_t mqdes, char *msg_ptr, size_t msg_len, unsigned int *msg_prio);
@@ -93,11 +148,11 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        int val_server = atoi(in_msg.msg_val);
-        printf("Client MsgQ: Msg received from the server with val = %d\n", val_server);
+        printf("Status code received from the server = %s with msg = %s.", in_msg.status_code, in_msg.msg_val);
+
     }
 
-    printf("Client MsgQ: bye\n");
+    printf("Client %d: bye\n", getpid());
 
     exit(0);
 }

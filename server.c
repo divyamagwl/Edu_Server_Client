@@ -10,23 +10,27 @@
 #define MSG_VAL_LEN 16
 // For the client queue message
 #define CLIENT_Q_NAME_LEN 16
+#define QUERY_TYPE_LEN 16
 
 // For the server queue message
 #define MSG_TYPE_LEN 16
 
+#define COURSE_NAME_LEN 16
+#define TEACHER_NAME_LEN 16
+
 typedef struct
 {
     char client_q[CLIENT_Q_NAME_LEN];
-    char msg_val[MSG_VAL_LEN];
+    char query_type[QUERY_TYPE_LEN];
+    char query_details[MSG_VAL_LEN];
 } client_msg_t;
 
 typedef struct
 {
     char msg_type[MSG_TYPE_LEN];
+    char status_code[MSG_VAL_LEN];
     char msg_val[MSG_VAL_LEN];
 } server_msg_t;
-
-static client_msg_t client_msg;
 
 #define SERVER_QUEUE_NAME "/server_msgq"
 #define QUEUE_PERMISSIONS 0660
@@ -34,10 +38,24 @@ static client_msg_t client_msg;
 #define MAX_MSG_SIZE sizeof(client_msg_t)
 #define MSG_BUFFER_SIZE (MAX_MSG_SIZE * MAX_MESSAGES)
 
+#define ADD_COURSE "ADD_COURSE"
+#define DELETE_COURSE "DELETE_COURSE"
+#define ADD_TEACHER "ADD_TEACHER"
+#define DELETE_TEACHER "DELETE_TEACHER"
+
 int MIN_COURSES = 10;
 int MAX_COURSES = 15;
 int MIN_TEACHERS = 5;
 int MAX_TEACHERS = 10;
+
+struct Teacher {
+    char name[TEACHER_NAME_LEN];
+} teachers[10];
+
+struct Course {
+    char name[COURSE_NAME_LEN];
+    struct Teacher teacher;
+} courses[15];
 
 
 void init_config() {
@@ -60,7 +78,7 @@ void init_config() {
     printf("MIN TEACHERS (min 5): ");
     scanf("%d", &min_teachers);
     printf("MAX COURSES (max 10): ");
-    scanf(" %d", &max_teachers); // Space is required before %d : https://stackoverflow.com/questions/26085237/simple-c-code-not-working
+    scanf(" %d%*c", &max_teachers); // Space is required before %d : https://stackoverflow.com/questions/26085237/simple-c-code-not-working
 
     if(min_courses <= max_courses) {
         if(min_courses >= MIN_COURSES && min_courses <= MAX_COURSES) {
@@ -80,6 +98,7 @@ void init_config() {
         }
     }
 
+    printf("Initial server configuration set!\n");
     return;
 }
 
@@ -87,11 +106,10 @@ void init_config() {
 int main(int argc, char **argv)
 {
     mqd_t qd_srv, qd_client; // Server and Client Msg queue descriptors
-    int num = 1;
 
     printf("Welcome to the Education Server!!!\n");
-    init_config();
-
+    init_config(); // Initial server configuration
+    
     struct mq_attr attr;
 
     attr.mq_flags = 0;
@@ -107,7 +125,7 @@ int main(int argc, char **argv)
     }
 
     client_msg_t in_msg;
-    int val_client;
+
     while (1)
     {
         // ssize_t mq_receive(mqd_t mqdes, char *msg_ptr, size_t msg_len, unsigned int *msg_prio);
@@ -117,15 +135,13 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        val_client = atoi(in_msg.msg_val);
-        printf("%d: Server MsgQ: message received.\n", num);
         printf("Client msg q name = %s\n", in_msg.client_q);
-        printf("Client msg val = %d\n", val_client);
-        num++;
+        printf("Query type = %s Details = %s.\n", in_msg.query_type, in_msg.query_details);
 
         server_msg_t out_msg;
-        strcpy(out_msg.msg_type, "Server msg"); // strcpy(destPtr, srcPtr)
-        sprintf(out_msg.msg_val, "%d", val_client + 10);
+        strcpy(out_msg.msg_type, "Server msg"); 
+        strcpy(out_msg.status_code, "300"); 
+        strcpy(out_msg.msg_val, "All good"); 
 
         // Open the client queue using the client queue name received
         if ((qd_client = mq_open(in_msg.client_q, O_WRONLY)) == 1)
