@@ -170,7 +170,8 @@ int add_course(char *name)
 
 int delete_course(char *name)
 {
-    if((num_courses - 1) < MIN_COURSES) {
+    if ((num_courses - 1) < MIN_COURSES)
+    {
         return MIN_COURSE_REQD;
     }
     // Checking if the course already exists or not
@@ -221,8 +222,8 @@ int add_teacher(char *name)
 
 int delete_teacher(char *name)
 {
-    printf("%d, %d\n",num_teachers, MIN_TEACHERS);
-    if((num_teachers - 1) < MIN_TEACHERS) {
+    if ((num_teachers - 1) < MIN_TEACHERS)
+    {
         return MIN_TEACHER_REQD;
     }
 
@@ -298,7 +299,6 @@ void *generate_report()
 /* Signal Handler for SIGINT */
 void sigintHandler(int sig_num)
 {
-    signal(sig_num, SIG_IGN);
     FILE *fptr;
 
     fptr = fopen("server.txt", "w");
@@ -311,7 +311,7 @@ void sigintHandler(int sig_num)
 
     print_report(fptr);
     fclose(fptr);
-    printf("\nServer exited. Data successfully stored in 'server.txt'\n");
+    printf(GREEN "\nServer exited. Data successfully stored in 'server.txt'\n" RESET);
     exit(0);
 }
 
@@ -324,14 +324,16 @@ int main(int argc, char **argv)
     mqd_t qd_srv, qd_client; // Server and Client Msg queue descriptors
 
     printf("Welcome to the Education Server!!!\n");
-     // Initial server configuration
+    // Initial server configuration
     printf("Do you want to use default initial configurations? (Yes = 0, No = 1) : ");
     int config = 0;
     scanf("%d%*c", &config);
-    if(config == 1) {
+    if (config == 1)
+    {
         init_config(1);
     }
-    else {
+    else
+    {
         init_config(0);
     }
 
@@ -388,8 +390,8 @@ int main(int argc, char **argv)
 
         int status = -1, final_status = -1;
 
-        char* token = strtok(client_query_details, ",");
-        while( token != NULL )
+        char *token = strtok(client_query_details, ",");
+        while (token != NULL)
         {
             if (strcmp(client_query_type, ADD_COURSE) == 0)
             {
@@ -408,7 +410,8 @@ int main(int argc, char **argv)
                 status = delete_teacher(token);
             }
 
-            if(final_status == -1 || status != SUCCESS) {
+            if (final_status == -1 || status != SUCCESS)
+            {
                 final_status = status;
             }
 

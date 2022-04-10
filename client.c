@@ -24,12 +24,13 @@ typedef struct
     char status_code[MSG_VAL_LEN];
 } server_msg_t;
 
-void display_menu() {
-	printf("\n1. Add a course");
-	printf("\n2. Delete a course");
-	printf("\n3. Add a teacher");
-	printf("\n4. Delete a teacher");
-	printf("\n5. Quit program");
+void display_menu()
+{
+    printf("\n1. Add a course");
+    printf("\n2. Delete a course");
+    printf("\n3. Add a teacher");
+    printf("\n4. Delete a teacher");
+    printf("\n5. Quit program");
 }
 
 int main(int argc, char **argv)
@@ -67,44 +68,47 @@ int main(int argc, char **argv)
     char query_msg[MSG_VAL_LEN];
     display_menu();
 
-    while(!quit) {
+    while (!quit)
+    {
         validChoice = 1;
         printf("\nEnter your choice : ");
-	    scanf("%d%*c", &choice);
+        scanf("%d%*c", &choice);
 
-        switch(choice)
-	    {
-            case 1:
-                strcpy(out_msg.query_type, ADD_COURSE);
-                printf("Enter course name: ");
-                scanf("%[^\n]%*c",query_msg);
-                break;
-            case 2:
-                strcpy(out_msg.query_type, DELETE_COURSE);
-                printf("Enter course name: ");
-                scanf("%[^\n]%*c",query_msg);
-                break;
-            case 3:
-                strcpy(out_msg.query_type, ADD_TEACHER);
-                printf("Enter teacher name: ");
-                scanf("%[^\n]%*c",query_msg);
-                break;
-            case 4:
-                strcpy(out_msg.query_type, DELETE_TEACHER);
-                printf("Enter teacher name: ");
-                scanf("%[^\n]%*c",query_msg);
-                break;            
-            case 5:
-                quit = 1;
-                break;
-            default:
-                printf("Please Enter a Valid Choice!!");
-                validChoice = 0;
-                break;
+        switch (choice)
+        {
+        case 1:
+            strcpy(out_msg.query_type, ADD_COURSE);
+            printf("Enter course name: ");
+            scanf("%[^\n]%*c", query_msg);
+            break;
+        case 2:
+            strcpy(out_msg.query_type, DELETE_COURSE);
+            printf("Enter course name: ");
+            scanf("%[^\n]%*c", query_msg);
+            break;
+        case 3:
+            strcpy(out_msg.query_type, ADD_TEACHER);
+            printf("Enter teacher name: ");
+            scanf("%[^\n]%*c", query_msg);
+            break;
+        case 4:
+            strcpy(out_msg.query_type, DELETE_TEACHER);
+            printf("Enter teacher name: ");
+            scanf("%[^\n]%*c", query_msg);
+            break;
+        case 5:
+            quit = 1;
+            break;
+        default:
+            printf("Please Enter a Valid Choice!!");
+            validChoice = 0;
+            break;
         }
 
-        if(quit) break;
-        if(!validChoice) continue;
+        if (quit)
+            break;
+        if (!validChoice)
+            continue;
 
         strcpy(out_msg.query_details, query_msg);
 
@@ -127,38 +131,40 @@ int main(int argc, char **argv)
         printf("Status code received from the server = %s\n", in_msg.status_code);
 
         int status = atoi(in_msg.status_code);
-        if(status == SUCCESS) {
+        if (status == SUCCESS)
+        {
             printf(GREEN);
             printf("SUCCESS\n");
         }
-        else {
+        else
+        {
             printf(RED);
-            switch(status)
+            switch (status)
             {
-                case COURSE_DUPLICATE:
-                    printf("One of the course already exists\n");
-                    break;
-                case COURSE_NOT_EXISTS:
-                    printf("Course does not exists\n");
-                    break;
-                case MAX_COURSE_FULL:
-                    printf("Maximum number of courses reached\n");
-                    break;
-                case MIN_COURSE_REQD:
-                    printf("Cannot delete more courses. Minimum number of courses reached\n");
-                    break;
-                case TEACHER_DUPLICATE:
-                    printf("One of the teacher already exists\n");
-                    break;
-                case TEACHER_NOT_EXISTS:
-                    printf("Teacher does not exists\n");
-                    break;
-                case MAX_TEACHER_FULL:
-                    printf("Maximum number of teachers reached\n");
-                    break;
-                case MIN_TEACHER_REQD:
-                    printf("Cannot delete more teachers. Minimum number of teachers reached\n");
-                    break;
+            case COURSE_DUPLICATE:
+                printf("One of the course already exists\n");
+                break;
+            case COURSE_NOT_EXISTS:
+                printf("Course does not exists\n");
+                break;
+            case MAX_COURSE_FULL:
+                printf("Maximum number of courses reached\n");
+                break;
+            case MIN_COURSE_REQD:
+                printf("Cannot delete more courses. Minimum number of courses reached\n");
+                break;
+            case TEACHER_DUPLICATE:
+                printf("One of the teacher already exists\n");
+                break;
+            case TEACHER_NOT_EXISTS:
+                printf("Teacher does not exists\n");
+                break;
+            case MAX_TEACHER_FULL:
+                printf("Maximum number of teachers reached\n");
+                break;
+            case MIN_TEACHER_REQD:
+                printf("Cannot delete more teachers. Minimum number of teachers reached\n");
+                break;
             }
         }
         printf(RESET);

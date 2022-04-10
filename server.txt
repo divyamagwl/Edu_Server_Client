@@ -1,14 +1,5 @@
 
 ------------REPORT STARTED----------------
 COURSES: 
-Name: A Teacher: NULL
-Name: B Teacher: NULL
 TEACHERS: 
-Name: T
-Name: K
-Name: L
-Name: P
-Name: S
-Name: D
-Name: F
 ------------REPORT ENDED------------------
