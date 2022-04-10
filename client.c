@@ -123,38 +123,45 @@ int main(int argc, char **argv)
             exit(1);
         }
 
+        printf(BLUE);
         printf("Status code received from the server = %s\n", in_msg.status_code);
 
-        switch(atoi(in_msg.status_code))
-        {
-            case SUCCESS:
-                printf("SUCCESS\n");
-                break;
-            case COURSE_DUPLICATE:
-                printf("One of the course already exists\n");
-                break;
-            case COURSE_NOT_EXISTS:
-                printf("Course does not exists\n");
-                break;
-            case MAX_COURSE_FULL:
-                printf("Maximum number of courses reached\n");
-                break;
-            case MIN_COURSE_REQD:
-                printf("Cannot delete more courses. Minimum number of courses reached\n");
-                break;
-            case TEACHER_DUPLICATE:
-                printf("One of the teacher already exists\n");
-                break;
-            case TEACHER_NOT_EXISTS:
-                printf("Teacher does not exists\n");
-                break;
-            case MAX_TEACHER_FULL:
-                printf("Maximum number of teachers reached\n");
-                break;
-            case MIN_TEACHER_REQD:
-                printf("Cannot delete more teachers. Minimum number of teachers reached\n");
-                break;
+        int status = atoi(in_msg.status_code);
+        if(status == SUCCESS) {
+            printf(GREEN);
+            printf("SUCCESS\n");
         }
+        else {
+            printf(RED);
+            switch(status)
+            {
+                case COURSE_DUPLICATE:
+                    printf("One of the course already exists\n");
+                    break;
+                case COURSE_NOT_EXISTS:
+                    printf("Course does not exists\n");
+                    break;
+                case MAX_COURSE_FULL:
+                    printf("Maximum number of courses reached\n");
+                    break;
+                case MIN_COURSE_REQD:
+                    printf("Cannot delete more courses. Minimum number of courses reached\n");
+                    break;
+                case TEACHER_DUPLICATE:
+                    printf("One of the teacher already exists\n");
+                    break;
+                case TEACHER_NOT_EXISTS:
+                    printf("Teacher does not exists\n");
+                    break;
+                case MAX_TEACHER_FULL:
+                    printf("Maximum number of teachers reached\n");
+                    break;
+                case MIN_TEACHER_REQD:
+                    printf("Cannot delete more teachers. Minimum number of teachers reached\n");
+                    break;
+            }
+        }
+        printf(RESET);
     }
 
     printf("Client %d: bye\n", getpid());

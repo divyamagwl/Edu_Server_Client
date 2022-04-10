@@ -29,3 +29,9 @@
 #define TEACHER_NOT_EXISTS 411
 #define MAX_TEACHER_FULL 412
 #define MIN_TEACHER_REQD 413
+
+
+#define GREEN "\033[0;32m"
+#define RED "\033[1;31m"
+#define BLUE "\033[0;34m"
+#define RESET "\033[0m"

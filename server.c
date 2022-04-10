@@ -60,8 +60,6 @@ void init_config(int configurable)
 
     int min_courses, max_courses, min_teachers, max_teachers;
 
-    printf("Please set these initial configurations of the server:\n");
-
     if (configurable)
     {
         printf("MIN COURSES (min 10): ");
@@ -290,7 +288,9 @@ void *generate_report()
     {
         sleep(10);
         sem_wait(&bin_sem); // Thread gets blocked if bin_sem is not free
+        printf(BLUE);
         print_report(stdout);
+        printf(RESET);
         sem_post(&bin_sem);
     }
 }
@@ -311,7 +311,7 @@ void sigintHandler(int sig_num)
 
     print_report(fptr);
     fclose(fptr);
-    printf("\nServer exited. Data succesffully stored in 'server.txt'");
+    printf("\nServer exited. Data successfully stored in 'server.txt'\n");
     exit(0);
 }
 
