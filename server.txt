@@ -1,10 +1,14 @@
 
 ------------REPORT STARTED----------------
 COURSES: 
+Name: A Teacher: T
+Name: B Teacher: K
+Name: C Teacher: L
 TEACHERS: 
-0. Name: T
-2. Name: W
-3. Name: E
-4. Name: R
-5. Name: Y
+Name: T
+Name: K
+Name: L
+Name: P
+Name: QQ
+Name: Q
 ------------REPORT ENDED------------------

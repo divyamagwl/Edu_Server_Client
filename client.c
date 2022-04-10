@@ -78,25 +78,21 @@ int main(int argc, char **argv)
                 strcpy(out_msg.query_type, ADD_COURSE);
                 printf("Enter course name: ");
                 scanf("%[^\n]%*c",query_msg);
-                strcpy(out_msg.query_details, query_msg);
                 break;
             case 2:
                 strcpy(out_msg.query_type, DELETE_COURSE);
                 printf("Enter course name: ");
                 scanf("%[^\n]%*c",query_msg);
-                strcpy(out_msg.query_details, query_msg);
                 break;
             case 3:
                 strcpy(out_msg.query_type, ADD_TEACHER);
                 printf("Enter teacher name: ");
                 scanf("%[^\n]%*c",query_msg);
-                strcpy(out_msg.query_details, query_msg);
                 break;
             case 4:
                 strcpy(out_msg.query_type, DELETE_TEACHER);
                 printf("Enter teacher name: ");
                 scanf("%[^\n]%*c",query_msg);
-                strcpy(out_msg.query_details, query_msg);
                 break;            
             case 5:
                 quit = 1;
@@ -110,13 +106,15 @@ int main(int argc, char **argv)
         if(quit) break;
         if(!validChoice) continue;
 
+        strcpy(out_msg.query_details, query_msg);
+
         if (mq_send(qd_srv, (char *)&out_msg, sizeof(out_msg), 0) == -1)
         {
             perror("Client MsgQ: Not able to send message to the queue /server_msgq");
             continue;
         }
 
-        printf("Message sent successfully: %s %s\n", out_msg.query_type, out_msg.query_details);
+        printf("\nMessage sent successfully: %s %s\n", out_msg.query_type, out_msg.query_details);
 
         server_msg_t in_msg;
         if (mq_receive(qd_client, (char *)&in_msg, MAX_MSG_SIZE, NULL) == -1)
@@ -125,8 +123,38 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        printf("Status code received from the server = %s", in_msg.status_code);
+        printf("Status code received from the server = %s\n", in_msg.status_code);
 
+        switch(atoi(in_msg.status_code))
+        {
+            case SUCCESS:
+                printf("SUCCESS\n");
+                break;
+            case COURSE_DUPLICATE:
+                printf("One of the course already exists\n");
+                break;
+            case COURSE_NOT_EXISTS:
+                printf("Course does not exists\n");
+                break;
+            case MAX_COURSE_FULL:
+                printf("Maximum number of courses reached\n");
+                break;
+            case MIN_COURSE_REQD:
+                printf("Cannot delete more courses. Minimum number of courses reached\n");
+                break;
+            case TEACHER_DUPLICATE:
+                printf("One of the teacher already exists\n");
+                break;
+            case TEACHER_NOT_EXISTS:
+                printf("Teacher does not exists\n");
+                break;
+            case MAX_TEACHER_FULL:
+                printf("Maximum number of teachers reached\n");
+                break;
+            case MIN_TEACHER_REQD:
+                printf("Cannot delete more teachers. Minimum number of teachers reached\n");
+                break;
+        }
     }
 
     printf("Client %d: bye\n", getpid());
