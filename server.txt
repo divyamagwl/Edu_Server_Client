@@ -1,5 +1,14 @@
 
 ------------REPORT STARTED----------------
 COURSES: 
+0. Name: A Teacher: K
+1. Name: B Teacher: L
+2. Name: C Teacher: H
+3. Name: L Teacher: L
+4. Name: M Teacher: L
 TEACHERS: 
-------------REPORT ENDED----------------
+0. Name: T
+1. Name: H
+2. Name: K
+3. Name: L
+------------REPORT ENDED------------------

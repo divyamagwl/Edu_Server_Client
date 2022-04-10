@@ -157,7 +157,6 @@ int add_course(char *name)
                 int r = rand() % current_teacher;
                 struct Teacher t = available_teachers[r];
                 strcpy(c->teacher, t.name);
-                printf("%s %s\n", c->name, c->teacher);
             }
             return SUCCESS;
         }
@@ -249,7 +248,7 @@ void print_report(FILE *fptr)
         struct Course c = courses[i];
         if (strcmp("NULL", c.name) != 0)
         {
-            fprintf(fptr, "Name: %s Teacher: %s\n", c.name, c.teacher);
+            fprintf(fptr, "%d. Name: %s Teacher: %s\n", i, c.name, c.teacher);
         }
     }
 
@@ -259,11 +258,11 @@ void print_report(FILE *fptr)
         struct Teacher t = teachers[i];
         if (strcmp("NULL", t.name) != 0)
         {
-            fprintf(fptr, "Name: %s\n", t.name);
+            fprintf(fptr, "%d. Name: %s\n", i, t.name);
         }
     }
 
-    fprintf(fptr, "------------REPORT ENDED----------------\n");
+    fprintf(fptr, "------------REPORT ENDED------------------\n");
     return;
 }
 
@@ -271,10 +270,10 @@ void *generate_report()
 {
     while (1)
     {
+        sleep(10);
         sem_wait(&bin_sem); // Thread gets blocked if bin_sem is not free
         print_report(stdout);
         sem_post(&bin_sem);
-        sleep(10);
     }
 }
 
@@ -295,6 +294,52 @@ void sigintHandler(int sig_num)
     print_report(fptr);
     fclose(fptr);
     exit(0);
+}
+
+char **str_split(char *a_str, const char a_delim)
+{
+    char **result = 0;
+    size_t count = 0;
+    char *tmp = a_str;
+    char *last_comma = 0;
+    char delim[2];
+    delim[0] = a_delim;
+    delim[1] = 0;
+
+    /* Count how many elements will be extracted. */
+    while (*tmp)
+    {
+        if (a_delim == *tmp)
+        {
+            count++;
+            last_comma = tmp;
+        }
+        tmp++;
+    }
+
+    /* Add space for trailing token. */
+    count += last_comma < (a_str + strlen(a_str) - 1);
+
+    /* Add space for terminating null string so caller
+       knows where the list of returned strings ends. */
+    count++;
+
+    result = malloc(sizeof(char *) * count);
+
+    if (result)
+    {
+        size_t idx = 0;
+        char *token = strtok(a_str, delim);
+
+        while (token)
+        {
+            *(result + idx++) = strdup(token);
+            token = strtok(0, delim);
+        }
+        *(result + idx) = 0;
+    }
+
+    return result;
 }
 
 int main(int argc, char **argv)
@@ -339,7 +384,6 @@ int main(int argc, char **argv)
     }
 
     client_msg_t in_msg;
-    int status;
 
     while (1)
     {
@@ -357,29 +401,41 @@ int main(int argc, char **argv)
         strcpy(client_query_type, in_msg.query_type);
         strcpy(client_query_details, in_msg.query_details);
 
-        printf("Client msg q name = %s\n", in_msg.client_q);
-        printf("Query type = %s Details = %s.\n", client_query_type, client_query_details);
+        printf("\nClient msg q name = %s\n", in_msg.client_q);
+        printf("Query type = %s Arguments = %s.\n", client_query_type, client_query_details);
 
-        if (strcmp(client_query_type, ADD_COURSE) == 0)
+        int status = -1, final_status = -1;
+
+        char* token = strtok(client_query_details, ",");
+        while( token != NULL )
         {
-            status = add_course(client_query_details);
-        }
-        else if (strcmp(client_query_type, DELETE_COURSE) == 0)
-        {
-            status = delete_course(client_query_details);
-        }
-        else if (strcmp(client_query_type, ADD_TEACHER) == 0)
-        {
-            status = add_teacher(client_query_details);
-        }
-        else if (strcmp(client_query_type, DELETE_TEACHER) == 0)
-        {
-            status = delete_teacher(client_query_details);
+            if (strcmp(client_query_type, ADD_COURSE) == 0)
+            {
+                status = add_course(token);
+            }
+            else if (strcmp(client_query_type, DELETE_COURSE) == 0)
+            {
+                status = delete_course(token);
+            }
+            else if (strcmp(client_query_type, ADD_TEACHER) == 0)
+            {
+                status = add_teacher(token);
+            }
+            else if (strcmp(client_query_type, DELETE_TEACHER) == 0)
+            {
+                status = delete_teacher(token);
+            }
+
+            if(final_status == -1 || status != SUCCESS) {
+                final_status = status;
+            }
+
+            token = strtok(NULL, ",");
         }
 
         server_msg_t out_msg;
         strcpy(out_msg.msg_type, "Server msg");
-        sprintf(out_msg.status_code, "%d", status);
+        sprintf(out_msg.status_code, "%d", final_status);
 
         // Open the client queue using the client queue name received
         if ((qd_client = mq_open(in_msg.client_q, O_WRONLY)) == 1)

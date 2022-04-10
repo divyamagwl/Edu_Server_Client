@@ -6,6 +6,8 @@
 #define COURSE_NAME_LEN 16
 #define TEACHER_NAME_LEN 16
 
+#define MAX_ARGS 10
+
 #define SERVER_QUEUE_NAME "/server_msgq"
 #define QUEUE_PERMISSIONS 0660
 #define MAX_MESSAGES 10
