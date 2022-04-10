@@ -32,6 +32,9 @@ int MAX_COURSES = 15;
 int MIN_TEACHERS = 5;
 int MAX_TEACHERS = 10;
 
+int num_courses = 0;
+int num_teachers = 0;
+
 struct Teacher
 {
     char name[TEACHER_NAME_LEN];
@@ -158,6 +161,8 @@ int add_course(char *name)
                 struct Teacher t = available_teachers[r];
                 strcpy(c->teacher, t.name);
             }
+
+            num_courses += 1;
             return SUCCESS;
         }
     }
@@ -167,6 +172,9 @@ int add_course(char *name)
 
 int delete_course(char *name)
 {
+    if((num_courses - 1) < MIN_COURSES) {
+        return MIN_COURSE_REQD;
+    }
     // Checking if the course already exists or not
     for (int i = 0; i < MAX_COURSES; i++)
     {
@@ -176,6 +184,8 @@ int delete_course(char *name)
         {
             strcpy(c->name, "NULL");
             strcpy(c->teacher, "NULL");
+
+            num_courses -= 1;
             return SUCCESS;
         }
     }
@@ -203,6 +213,7 @@ int add_teacher(char *name)
         if (strcmp("NULL", t->name) == 0)
         {
             strcpy(t->name, name);
+            num_teachers += 1;
             return SUCCESS;
         }
     }
@@ -212,6 +223,11 @@ int add_teacher(char *name)
 
 int delete_teacher(char *name)
 {
+    printf("%d, %d\n",num_teachers, MIN_TEACHERS);
+    if((num_teachers - 1) < MIN_TEACHERS) {
+        return MIN_TEACHER_REQD;
+    }
+
     // Checking if the teacher already exists or not
     for (int i = 0; i < MAX_TEACHERS; i++)
     {
@@ -231,6 +247,8 @@ int delete_teacher(char *name)
             }
 
             strcpy(t->name, "NULL");
+
+            num_teachers -= 1;
             return SUCCESS;
         }
     }
@@ -248,7 +266,7 @@ void print_report(FILE *fptr)
         struct Course c = courses[i];
         if (strcmp("NULL", c.name) != 0)
         {
-            fprintf(fptr, "%d. Name: %s Teacher: %s\n", i, c.name, c.teacher);
+            fprintf(fptr, "Name: %s Teacher: %s\n", c.name, c.teacher);
         }
     }
 
@@ -258,7 +276,7 @@ void print_report(FILE *fptr)
         struct Teacher t = teachers[i];
         if (strcmp("NULL", t.name) != 0)
         {
-            fprintf(fptr, "%d. Name: %s\n", i, t.name);
+            fprintf(fptr, "Name: %s\n", t.name);
         }
     }
 
