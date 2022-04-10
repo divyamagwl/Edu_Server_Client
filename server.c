@@ -234,25 +234,46 @@ int delete_teacher(char *name)
         t = &teachers[i];
         if (strcmp(name, t->name) == 0)
         {
-
-            for (int i = 0; i < MAX_COURSES; i++)
+            for (int j = 0; j < MAX_COURSES; j++)
             {
                 struct Course *c = malloc(sizeof(struct Course));
-                c = &courses[i];
+                c = &courses[j];
                 if (strcmp(t->name, c->name) == 0)
                 {
                     strcpy(c->teacher, "NULL");
                 }
             }
-
             strcpy(t->name, "NULL");
-
             num_teachers -= 1;
             return SUCCESS;
         }
     }
 
     return TEACHER_NOT_EXISTS; // ERROR: Maximum teachers reached
+}
+
+int assign_teacher(char* course, char* teacher) {
+
+    for (int i = 0; i < MAX_COURSES; i++)
+    {
+        struct Course *c = malloc(sizeof(struct Course));
+        c = &courses[i];
+        if (strcmp(course, c->name) == 0)
+        {
+            for (int j = 0; j < MAX_TEACHERS; j++)
+            {
+                struct Teacher t = teachers[j];
+                if (strcmp(teacher, t.name) == 0)
+                {
+                    strcpy(c->teacher, t.name);
+                    return SUCCESS;
+                }
+            }
+            return TEACHER_NOT_EXISTS;
+        }
+    }
+
+    return COURSE_NOT_EXISTS; // ERROR: Course does not exist so can't be assigned a teacher
 }
 
 void print_report(FILE *fptr)
@@ -338,7 +359,6 @@ int main(int argc, char **argv)
     }
 
     struct mq_attr attr;
-
     attr.mq_flags = 0;
     attr.mq_maxmsg = MAX_MESSAGES;
     attr.mq_msgsize = MAX_MSG_SIZE;
@@ -409,6 +429,13 @@ int main(int argc, char **argv)
             {
                 status = delete_teacher(token);
             }
+            else if (strcmp(client_query_type, ASSIGN_TEACHER) == 0)
+            {
+                char* course = token;
+                char* teacher = strtok(NULL, ",");
+                status = assign_teacher(course, teacher);
+            }
+            
 
             if (final_status == -1 || status != SUCCESS)
             {
@@ -420,6 +447,10 @@ int main(int argc, char **argv)
 
         server_msg_t out_msg;
         strcpy(out_msg.msg_type, "Server msg");
+
+        if(final_status == -1) {
+            final_status = ERROR;
+        }
         sprintf(out_msg.status_code, "%d", final_status);
 
         // Open the client queue using the client queue name received

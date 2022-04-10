@@ -30,7 +30,8 @@ void display_menu()
     printf("\n2. Delete a course");
     printf("\n3. Add a teacher");
     printf("\n4. Delete a teacher");
-    printf("\n5. Quit program");
+    printf("\n5. Assign a teacher");
+    printf("\n9. Quit program");
 }
 
 int main(int argc, char **argv)
@@ -78,25 +79,30 @@ int main(int argc, char **argv)
         {
         case 1:
             strcpy(out_msg.query_type, ADD_COURSE);
-            printf("Enter course name: ");
+            printf("Enter name of courses (comma separated) : ");
             scanf("%[^\n]%*c", query_msg);
             break;
         case 2:
             strcpy(out_msg.query_type, DELETE_COURSE);
-            printf("Enter course name: ");
+            printf("Enter name of courses (comma separated) : ");
             scanf("%[^\n]%*c", query_msg);
             break;
         case 3:
             strcpy(out_msg.query_type, ADD_TEACHER);
-            printf("Enter teacher name: ");
+            printf("Enter name of teachers (comma separated): ");
             scanf("%[^\n]%*c", query_msg);
             break;
         case 4:
             strcpy(out_msg.query_type, DELETE_TEACHER);
-            printf("Enter teacher name: ");
+            printf("Enter name of teachers (comma separated): ");
             scanf("%[^\n]%*c", query_msg);
             break;
         case 5:
+            strcpy(out_msg.query_type, ASSIGN_TEACHER);
+            printf("Enter course name and teacher name (Ex: A,B): ");
+            scanf("%[^\n]%*c", query_msg);
+            break;
+        case 9:
             quit = 1;
             break;
         default:
@@ -164,6 +170,9 @@ int main(int argc, char **argv)
                 break;
             case MIN_TEACHER_REQD:
                 printf("Cannot delete more teachers. Minimum number of teachers reached\n");
+                break;
+            case ERROR:
+                printf("Some error occured\n");
                 break;
             }
         }
